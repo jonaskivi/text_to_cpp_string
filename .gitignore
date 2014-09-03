@@ -19,3 +19,6 @@
 *.exe
 *.out
 *.app
+
+#OSX hidden files
+.DS_Store
