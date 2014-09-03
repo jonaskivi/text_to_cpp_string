@@ -196,36 +196,6 @@ public:
 
 	}
 
-	bool parse()
-	{
-
-		//rae::log("We have sourceFiles: ", sourceFiles.size(), "\n");;
-
-		if(sourceFiles.size() == 0)
-		{
-			cout<<"No source files added.\n";
-			return false;
-		}
-	
-		for(uint i = 0; i < sourceFiles.size(); i++)
-		{
-			#ifdef DEBUG_RAE_HUMAN
-			cout<<"sourcefile: "<<sourceFiles[i]<<"\n";
-			#endif
-
-			currentFilenamePath = sourceFiles[i];
-
-		}
-	
-		return true;
-	}
-
-	//Write to default path. Which is workingPath + "/cpp/"
-	/*bool write()
-	{
-		return write(workingPath.string() + "/output/" );
-	}*/
-
 	void write(boost::filesystem::path original_filename_path)
 	{
 		original_filename_path.replace_extension(".hpp.hpp");
@@ -254,6 +224,8 @@ public:
 		fwrite( processedString.c_str(), sizeof(char), processedString.size(), outFile );
 
 		fclose(outFile);
+
+		cout<<"Wrote: "<<original_filename_path.string()<<"\n";
 
 		return;
 	}
