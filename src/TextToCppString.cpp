@@ -173,6 +173,10 @@ public:
 			processedString += "\\n\"\n\"";//add \n and quotation marks,
 			//then add a real \n and another quote for the beginning line.
 		}
+		else if( currentChar == '\\')
+		{
+			processedString += "\\\\";//add two backslashes
+		}
 		else if( currentChar == '\"')
 		{
 			processedString += "\\\"";//add backslash and quote.

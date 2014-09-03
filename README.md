@@ -38,7 +38,7 @@ std::string processedString =
 "\t{\n"
 "\t\t#ifdef RAE_DEBUG\n"
 "\t\t\tcout<<\"LinkList.unlinkByValue():\";\n"
-"\t\t\tif(obj) cout<<*obj<<\"\n\"; else cout<<\"nullptr\n\";\n"
+"\t\t\tif(obj) cout<<*obj<<\"\\n\"; else cout<<\"nullptr\\n\";\n"
 "\t\t#endif\n"
 "\t\tfor(link<T>* a_link : links)\n"
 "\t\t{\n"
