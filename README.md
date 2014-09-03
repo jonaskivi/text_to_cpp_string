@@ -14,7 +14,7 @@ What can I use it for?
 If you have a source file in some language (C++, Python, JavaScript etc.), and you want to embed that code into another C++ source file as a C++ std::string (or const char*), you'll have to preprocess it a bit. This program automates that processing.
 
 For a source file like:
-
+```cpp
   void unlinkAllByValue()
 	{
 		#ifdef RAE_DEBUG
@@ -28,9 +28,10 @@ For a source file like:
 		links.clear();
 		obj = nullptr;
 	}
-	
+```	
 	it will output:
 
+```cpp
 #include <string>
 std::string processedString = 	
 "\tvoid unlinkAllByValue()\n"
@@ -48,5 +49,6 @@ std::string processedString =
 "\t}\n"
 "\n"
 "";
+```
 
 So you can embed that in your code.
