@@ -198,7 +198,20 @@ public:
 
 	void write(boost::filesystem::path original_filename_path)
 	{
-		original_filename_path.replace_extension(".hpp.hpp");
+		//Fun fact: on old boost replacing the extension ".hpp" with ".hpp.hpp"
+		//does nothing. So we got overwritten... and this didn't work:
+		//original_filename_path.replace_extension(".hpp.hpp");
+
+		string root_path;
+
+		root_path = original_filename_path.parent_path().string();
+		cout<<"root_path: "<<root_path<<"\n";
+		
+		if(root_path == ".")//fixing boost "bugs" or features is annoying.
+			root_path = "./";
+		
+		string orig_filename = original_filename_path.stem().string();
+		original_filename_path = root_path + orig_filename + ".hpp.hpp";
 
 		if(boost::filesystem::exists(original_filename_path.parent_path()) == false)
 		{
@@ -209,6 +222,7 @@ public:
 			else
 			{
 				cout<<"Failed to create folder: "<<original_filename_path.parent_path()<<"\n";
+				cout<<"Writing to file failed: "<<original_filename_path.string()<<"\n";
 				return;
 			}
 		}

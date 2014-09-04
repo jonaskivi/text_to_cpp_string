@@ -1,6 +1,7 @@
 EXECUTABLE := text_to_cpp_string
 CXX	:= g++
-CXXFLAGS := -g -std=c++0x
+CXXFLAGS := -g
+#-std=c++0x
 INCLUDES := -I. -I./src
 
 ifeq ($(OS),Windows_NT)
@@ -16,12 +17,14 @@ else
     ifeq ($(UNAME_S),Linux)
         #CCFLAGS += -D LINUX
         INCLUDES += -I../boost_uusi/usr_local_include/
-		LIBS     := -L../boost_linux32/usr_local_lib/ -L/usr/lib/ -lboost_chrono -lboost_filesystem -lboost_system
+				LIBS     := -L../boost_linux32/usr_local_lib/ -L/usr/lib/ -lboost_chrono -lboost_filesystem -lboost_system
     endif
     ifeq ($(UNAME_S),Darwin)
         #CCFLAGS += -D OSX
-        INCLUDES += -I../boost_uusi/usr_local_include/
-		LIBS     := -L../boost_uusi/usr_local_lib/ -lboost_chrono -lboost_filesystem -lboost_system
+        #INCLUDES += -I../boost_uusi/usr_local_include/
+				#LIBS     := -L../boost_uusi/usr_local_lib/ -lboost_chrono -lboost_filesystem -lboost_system
+				INCLUDES += -I../rae_src/frameworks_for_rae/old_boost/boost_usr_local_include/
+				LIBS     := -L../rae_src/frameworks_for_rae/old_boost/boost_usr_local_lib/ -lboost_chrono -lboost_filesystem -lboost_system
     endif
     UNAME_P := $(shell uname -p)
     ifeq ($(UNAME_P),x86_64)
