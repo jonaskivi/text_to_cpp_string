@@ -1,7 +1,9 @@
 text_to_cpp_string
 ==================
 
-Convert text files or source code files to C++ strings that can be embedded in your code
+Convert text files or source code files to C++ strings that can be embedded in your code.
+
+Note: The C++11 raw string literals have made this code obsolete, so if you can use C++11: use raw string literals. If you're stuck with a C++98 compiler, then this project might still be usefull.
 
 build it with:
 ```
