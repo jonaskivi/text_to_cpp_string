@@ -5,6 +5,24 @@ Convert text files or source code files to C++ strings that can be embedded in y
 
 Note: The C++11 raw string literals have made this code obsolete, so if you can use C++11: use raw string literals. If you're stuck with a C++98 compiler, then this project might still be usefull.
 
+
+Building:
+install premake4
+To create a Visual Studio 2012 solution in command line:
+```
+premake4.exe vs2012
+```
+
+usage:
+```
+./text_to_cpp_string yourfile.hpp
+```
+
+will output yourfile.hpp.cpp_string.hpp
+
+
+OLD STUFF:
+
 build it with:
 ```
 make && make test

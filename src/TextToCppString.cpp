@@ -1,22 +1,31 @@
+/*
+Building:
+install premake4
+To create a Visual Studio 2012 solution in command line:
+premake4.exe vs2012
+
+usage:
+./text_to_cpp_string yourfile.hpp
+
+will output yourfile.hpp.cpp_string.hpp
+*/
+
 #include <iostream>
 #include <string>
 #include <vector>
 #include <memory>
 	using namespace std;
 
-#include <boost/foreach.hpp>
-#define foreach BOOST_FOREACH
-
-#include <boost/filesystem.hpp>
-
-#include <boost/signals2.hpp>
-#include <boost/bind.hpp>
-#include <boost/range/algorithm/remove_if.hpp>
-	using namespace boost;
-
 #include <stdio.h>//for FILE
+#include <sys/stat.h>
 
-typedef unsigned int uint;
+#ifdef _WIN32
+    #include <direct.h>
+    #define GetCurrentDir _getcwd
+#else
+    #include <unistd.h>
+    #define GetCurrentDir getcwd
+ #endif
 
 namespace PathType
 {
@@ -28,67 +37,34 @@ enum e
 };
 }
 
-PathType::e checkPathType(boost::filesystem::path currentFilenamePath)
+PathType::e checkPathType(string currentFilenamePath)
 {	
 	PathType::e path_type;
 	path_type = PathType::DOES_NOT_EXIST; //we're a bit pessimistic here.
 
-	try
+	struct stat s;
+
+	if( stat(currentFilenamePath.c_str(), &s) == 0 )
 	{
-		if (boost::filesystem::exists(currentFilenamePath))    // does currentFilenamePath actually exist?
+		if( s.st_mode & S_IFDIR )
 		{
-			if (boost::filesystem::is_regular_file(currentFilenamePath))        // is currentFilenamePath a regular file?
-			{
-				#ifdef DEBUG_RAE_HUMAN
-				cout << currentFilenamePath << " size is " << boost::filesystem::file_size(currentFilenamePath) << "\n";
-				//rae::log(currentFilenamePath.string(), " size is ", boost::filesystem::file_size(currentFilenamePath), "\n");
-				#endif
-
-				path_type = PathType::FILE;
-			}
-			else if( boost::filesystem::is_directory(currentFilenamePath) )      // is currentFilenamePath a directory?
-			{
-				path_type = PathType::DIRECTORY;
-
-				cout << currentFilenamePath << " is a directory containing:\n";
-				//rae::log(currentFilenamePath.string(), "is a directory containing:\n");
-
-
-				typedef vector<boost::filesystem::path> vec;             // store paths,
-				vec v;                                // so we can sort them later
-
-				copy(boost::filesystem::directory_iterator(currentFilenamePath), boost::filesystem::directory_iterator(), back_inserter(v));
-
-				sort(v.begin(), v.end());             // sort, since directory iteration
-													  // is not ordered on some file systems
-
-				for (vec::const_iterator it (v.begin()); it != v.end(); ++it)
-				{
-				  cout << "   " << *it << "\n";
-					//rae::log("   ", *it, "\n");
-				}
-			}
-			else
-			{
-				//Hmm, we are not handling this in PathType... oh well. What is it really? A link? A ufo?
-
-				cout << currentFilenamePath << " exists, but is neither a regular file nor a directory\n";
-				//rae::log(currentFilenamePath, " exists, but is neither a regular file nor a directory\n");
-			}
+			//it's a directory
+			path_type = PathType::DIRECTORY;
+		}
+		else if( s.st_mode & S_IFREG )
+		{
+			//it's a file
+			path_type = PathType::FILE;
 		}
 		else
 		{
-			cout << currentFilenamePath << " does not exist\n";
-			//rae::log(currentFilenamePath, " does not exist\n");
-
-			path_type = PathType::DOES_NOT_EXIST;
+			//something else
 		}
 	}
-	catch (const boost::filesystem::filesystem_error& ex)
+	else
 	{
-		cout << ex.what() << "\n";
-		//rae::log(ex.what(), "\n");
-	}
+		//error
+	}	
 
 	return path_type;
 }
@@ -99,7 +75,17 @@ public:
 	TextToCppString()
 	{
 		isDone = false;
-		workingPath = boost::filesystem::current_path();
+		
+		char cCurrentPath[FILENAME_MAX];
+		if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath)))
+		{
+			cout<<"Error while getting working dir.\n";
+		}
+		cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
+		cout << "The current working directory is " << cCurrentPath << "\n";
+
+		workingPath = string(cCurrentPath); // It seems we are not yet using this workingPath for anything!
+
 		//moduleSearchPaths.push_back( workingPath );
 		//cout<<"Added current directory to file search paths: "<<moduleSearchPaths.back()<<"\n";
 	}
@@ -107,13 +93,12 @@ public:
 	~TextToCppString()
 	{
 	}
-
-	boost::filesystem::path workingPath;
+	
+	string workingPath; // It seems we are not yet using this workingPath for anything!
 	
 	void addSourceFile(string set_filename)
 	{
-		boost::filesystem::path currentFilenamePath = set_filename;
-		sourceFiles.push_back(currentFilenamePath);
+		sourceFiles.push_back(set_filename);
 	}
 
 	FILE* currentFile;
@@ -196,42 +181,46 @@ public:
 
 	}
 
-	void write(boost::filesystem::path original_filename_path)
+	string parentPath(string original_path)
 	{
-		//Fun fact: on old boost replacing the extension ".hpp" with ".hpp.hpp"
-		//does nothing. So we got overwritten... and this didn't work:
-		//original_filename_path.replace_extension(".hpp.hpp");
+		std::size_t found = original_path.find_last_of("/\\");
 
+		if(found > original_path.size())
+			return ""; // no path separators, so empty string is the parent dir.
+
+		//std::cout << " path: " << str.substr(0,found) << '\n';
+		//std::cout << " file: " << str.substr(found+1) << '\n';
+		cout << "path is: " << original_path.substr(0, found) << "\n";
+		return original_path.substr(0, found);
+	}
+
+	string getFilenameFromPath(string original_path)
+	{
+		std::size_t found = original_path.find_last_of("/\\");
+		//std::cout << " path: " << str.substr(0,found) << '\n';
+		//std::cout << " file: " << str.substr(found+1) << '\n';
+		cout << "file is: " << original_path.substr(found+1) << "\n";
+		return original_path.substr(found+1);
+	}
+
+	void write(string original_filename_path)
+	{
 		string root_path;
 
-		root_path = original_filename_path.parent_path().string();
+		root_path = parentPath(original_filename_path);
 		cout<<"root_path: "<<root_path<<"\n";
 		
-		if(root_path == ".")//fixing boost "bugs" or features is annoying.
+		if(root_path == ".")
 			root_path = "./";
 		
-		string orig_filename = original_filename_path.stem().string();
-		original_filename_path = root_path + orig_filename + ".hpp.hpp";
+		string orig_filename = getFilenameFromPath(original_filename_path);
+		original_filename_path = root_path + orig_filename + ".cpp_string.hpp";
 
-		if(boost::filesystem::exists(original_filename_path.parent_path()) == false)
-		{
-			if(boost::filesystem::create_directories( original_filename_path.parent_path() ) )
-			{
-				cout<<"Created folder: "<<original_filename_path.parent_path()<<"\n";
-			}
-			else
-			{
-				cout<<"Failed to create folder: "<<original_filename_path.parent_path()<<"\n";
-				cout<<"Writing to file failed: "<<original_filename_path.string()<<"\n";
-				return;
-			}
-		}
-
-		outFile = fopen(original_filename_path.string().c_str(), "w");
+		outFile = fopen(original_filename_path.c_str(), "w");
 
 		if( outFile == NULL )
 		{
-			cout<<"Writing to file failed: "<<original_filename_path.string()<<"\n";
+			cout<<"Writing to file failed: "<<original_filename_path<<"\n";
 			return;
 		}
 
@@ -239,7 +228,7 @@ public:
 
 		fclose(outFile);
 
-		cout<<"Wrote: "<<original_filename_path.string()<<"\n";
+		cout<<"Wrote: "<<original_filename_path<<"\n";
 
 		return;
 	}
@@ -249,10 +238,10 @@ public:
 	//we need a modulesList here...
 	//and put only a single langElement in SourceParser
 
-	boost::filesystem::path currentFilenamePath;//this is the whole filename and the path...
+	string currentFilenamePath;
 	
 	//A list of source files that we have already parsed:
-	vector<boost::filesystem::path> sourceFiles;
+	vector<string> sourceFiles;
 };
 
 int main(int argc, char * const argv[])
@@ -265,7 +254,7 @@ int main(int argc, char * const argv[])
 
 	TextToCppString TextToCppString;
 
-	for(uint i = 1; i < argc; i++)
+	for(int i = 1; i < argc; ++i)
 	{
 		cout<<"Adding source file: "<<argv[i]<<"\n";
 		TextToCppString.parseAndWriteSourceFile(argv[i]);
